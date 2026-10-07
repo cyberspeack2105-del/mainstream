@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    background: #f8fafc;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased font-sans;
+    overflow-x: hidden;
+  }
+
+  html,
+  body {
+    min-width: 320px;
+    max-width: 100%;
+  }
+}
+
+.mobile-nav-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #bae6fd transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bae6fd;
+  border-radius: 999px;
+}
