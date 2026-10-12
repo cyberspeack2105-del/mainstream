@@ -7,7 +7,12 @@ import {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const sessionId = readSignedSessionId(request.cookies.get(SESSION_COOKIE)?.value);
+  const cookieSessionId = readSignedSessionId(request.cookies.get(SESSION_COOKIE)?.value);
+  const authorization = request.headers.get('authorization');
+  const bearerToken = request.headers.get('x-mse-client') === 'flutter' && authorization?.startsWith('Bearer ')
+    ? authorization.slice('Bearer '.length)
+    : undefined;
+  const sessionId = cookieSessionId ?? readSignedSessionId(bearerToken);
 
   if (pathname === '/login') {
     if (!sessionId) return NextResponse.next();

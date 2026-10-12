@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDatabase } from '@/lib/db/mongodb';
-import { createSession, setSessionCookie, toSafeUser } from '@/lib/auth/session';
+import { createMobileSessionToken, createSession, setSessionCookie, toSafeUser } from '@/lib/auth/session';
 import type { UserDocument } from '@/lib/auth/types';
 
 export const runtime = 'nodejs';
@@ -96,7 +96,13 @@ export async function POST(request: NextRequest) {
 
     attemptsByAddress.delete(address);
     const session = await createSession(user._id);
-    const response = NextResponse.json({ user: toSafeUser(user) });
+    const responseBody: { user: ReturnType<typeof toSafeUser>; accessToken?: string } = {
+      user: toSafeUser(user),
+    };
+    if (request.headers.get('x-mse-client') === 'flutter') {
+      responseBody.accessToken = createMobileSessionToken(session._id);
+    }
+    const response = NextResponse.json(responseBody);
     setSessionCookie(response, session._id);
     return response;
   } catch (error) {

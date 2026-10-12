@@ -19,6 +19,10 @@ function signSessionId(sessionId: string): string {
   return createHmac('sha256', getSessionSecret()).update(sessionId).digest('hex');
 }
 
+export function createMobileSessionToken(sessionId: string): string {
+  return `${sessionId}.${signSessionId(sessionId)}`;
+}
+
 export function readSignedSessionId(token: string | undefined): string | null {
   if (!token) return null;
   const [sessionId, providedSignature, extra] = token.split('.');
@@ -83,7 +87,12 @@ export async function findSessionUser(sessionId: string): Promise<SafeUser | nul
 }
 
 export async function getAuthenticatedUser(request: NextRequest): Promise<SafeUser | null> {
-  const sessionId = readSignedSessionId(request.cookies.get(SESSION_COOKIE)?.value);
+  const cookieSessionId = readSignedSessionId(request.cookies.get(SESSION_COOKIE)?.value);
+  const authorization = request.headers.get('authorization');
+  const bearerToken = request.headers.get('x-mse-client') === 'flutter' && authorization?.startsWith('Bearer ')
+    ? authorization.slice('Bearer '.length)
+    : undefined;
+  const sessionId = cookieSessionId ?? readSignedSessionId(bearerToken);
   return sessionId ? findSessionUser(sessionId) : null;
 }
 
